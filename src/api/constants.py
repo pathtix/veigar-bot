@@ -25,6 +25,41 @@ class Constants:
         'SEA': 'sea.api.riotgames.com',
     }
 
+    # Region to platform mappings
+    REGION_MAPPINGS = {
+        'BR': ('AMERICAS', 'br1'),
+        'EUN': ('EUROPE', 'eun1'),
+        'EUW': ('EUROPE', 'euw1'),
+        'JP': ('ASIA', 'jp1'),
+        'KR': ('ASIA', 'kr'),
+        'LA1': ('AMERICAS', 'la1'),
+        'LA2': ('AMERICAS', 'la2'),
+        'NA': ('AMERICAS', 'na1'),
+        'OC': ('SEA', 'oc1'),
+        'PH': ('SEA', 'ph2'),
+        'RU': ('EUROPE', 'ru'),
+        'SG': ('SEA', 'sg2'),
+        'TH': ('SEA', 'th2'),
+        'TR': ('EUROPE', 'tr1'),
+        'TW': ('SEA', 'tw2'),
+        'VN': ('SEA', 'vn2')
+    }
+    
+    # Queue type mappings
+    QUEUE_TYPES = {
+        400: "Normal Draft",
+        420: "Ranked Solo/Duo",
+        430: "Normal Blind",
+        440: "Ranked Flex",
+        450: "ARAM",
+        700: "Clash",
+        900: "URF",
+        1020: "One for All",
+        1300: "Nexus Blitz",
+        1400: "Ultimate Spellbook",
+        1900: "URF"
+    }
+
     LOCALES = {
         'cs_CZ': 'Czech (Czech Republic)',
         'el_GR': 'Greek (Greece)',

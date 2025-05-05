@@ -4,21 +4,22 @@ from PyQt6.QtWidgets import (
     QFrame
 )
 from PyQt6.QtCore import Qt
+from api.constants import Constants
 
 class SettingsDialog(QDialog):
     """Dialog for changing application settings"""
     
-    def __init__(self, settings, regions, parent=None):
+    def __init__(self, settings, regions=None, parent=None):
         """Initialize the settings dialog
         
         Args:
             settings: The Settings instance
-            regions: Dictionary of available regions
+            regions: Dictionary of available regions (deprecated, using Constants.REGION_MAPPINGS)
             parent: Parent widget
         """
         super().__init__(parent)
         self.settings = settings
-        self.regions = regions
+        self.regions = Constants.REGION_MAPPINGS # Use Constants instead of parameter
         
         self.setWindowTitle("Settings")
         self.setMinimumWidth(400)

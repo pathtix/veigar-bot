@@ -2,6 +2,7 @@ import json
 import os
 import logging
 from pathlib import Path
+from api.constants import Constants
 
 class Settings:
     """Handles application settings storage and retrieval"""
@@ -13,7 +14,7 @@ class Settings:
         self.defaults = {
             "default_player_name": "",
             "default_tag_line": "",
-            "default_region": "NA",
+            "default_region": "TR",
             "auto_search_on_startup": False
         }
         

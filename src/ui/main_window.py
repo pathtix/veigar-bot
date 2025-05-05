@@ -11,6 +11,7 @@ from io import BytesIO
 from api.riot_api import RiotAPI
 from api.ddragon_api import DataDragonAPI
 from api.exceptions import APIKeyError
+from api.constants import Constants
 from .styles import MAIN_STYLE
 from .workers import SearchWorker, MatchHistoryWorker, IconLoaderWorker
 from .settings_dialog import SettingsDialog
@@ -259,26 +260,6 @@ class MatchHistoryWidget(QFrame):
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
 
 class MainWindow(QMainWindow):
-    # Define platform mappings
-    REGIONS = {
-        'BR': ('AMERICAS', 'br1'),
-        'EUN': ('EUROPE', 'eun1'),
-        'EUW': ('EUROPE', 'euw1'),
-        'JP': ('ASIA', 'jp1'),
-        'KR': ('ASIA', 'kr'),
-        'LA1': ('AMERICAS', 'la1'),
-        'LA2': ('AMERICAS', 'la2'),
-        'NA': ('AMERICAS', 'na1'),
-        'OC': ('SEA', 'oc1'),
-        'PH': ('SEA', 'ph2'),
-        'RU': ('EUROPE', 'ru'),
-        'SG': ('SEA', 'sg2'),
-        'TH': ('SEA', 'th2'),
-        'TR': ('EUROPE', 'tr1'),
-        'TW': ('SEA', 'tw2'),
-        'VN': ('SEA', 'vn2')
-    }
-
     def __init__(self):
         super().__init__()
         
@@ -332,7 +313,7 @@ class MainWindow(QMainWindow):
         """Load default settings and apply them to the UI"""
         # Set default region
         default_region = self.settings.get("default_region", "NA")
-        if default_region in self.REGIONS:
+        if default_region in Constants.REGION_MAPPINGS:
             self.region_selector.setCurrentText(default_region)
             
         # Set default player name and tag
@@ -355,7 +336,21 @@ class MainWindow(QMainWindow):
         
         # Create toolbar
         self._create_toolbar()
-        
+
+        # Homepage Image (Added ABOVE search bar)
+        self.homepage_image_label = QLabel()
+        image_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'assets', 'homepage_image.jpg'))
+        if os.path.exists(image_path):
+            pixmap = QPixmap(image_path)
+            # Scale pixmap to height 200, keeping aspect ratio
+            pixmap = pixmap.scaledToHeight(200, Qt.TransformationMode.SmoothTransformation)
+            self.homepage_image_label.setPixmap(pixmap)
+            self.homepage_image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.homepage_image_label.setFixedHeight(200) # Keep fixed height for layout
+            main_layout.addWidget(self.homepage_image_label) # Add image BEFORE search frame
+        else:
+            self.logger.warning(f"Homepage image not found at: {image_path}")
+
         # Search section
         search_frame = QFrame()
         search_frame.setObjectName("searchFrame")
@@ -365,8 +360,8 @@ class MainWindow(QMainWindow):
         
         # Region selector
         self.region_selector = QComboBox()
-        self.region_selector.addItems(self.REGIONS.keys())
-        self.current_platform = self.REGIONS[self.region_selector.currentText()][1]
+        self.region_selector.addItems(Constants.REGION_MAPPINGS.keys())
+        self.current_platform = Constants.REGION_MAPPINGS[self.region_selector.currentText()][1]
         
         self.region_selector.currentTextChanged.connect(self.on_region_changed)
         self.region_selector.setMaximumWidth(100)
@@ -410,7 +405,7 @@ class MainWindow(QMainWindow):
         # Initialize workers
         self.search_worker = None
         self.match_worker = None
-        self.icon_workers = []  # List to keep track of icon loading workers
+        self.icon_workers = []
 
     def _create_toolbar(self):
         """Create the application toolbar"""
@@ -435,7 +430,7 @@ class MainWindow(QMainWindow):
 
     def show_settings(self):
         """Show the settings dialog"""
-        dialog = SettingsDialog(self.settings, self.REGIONS, self)
+        dialog = SettingsDialog(self.settings, Constants.REGION_MAPPINGS, self)
         if dialog.exec():
             # Settings were saved
             self._load_default_settings()
@@ -460,7 +455,7 @@ class MainWindow(QMainWindow):
 
     def on_region_changed(self, region_code: str):
         """Handle region change"""
-        region_info = self.REGIONS.get(region_code)
+        region_info = Constants.REGION_MAPPINGS.get(region_code)
         if region_info:
             self.current_platform = region_info[1]
             self.status_bar.showMessage(f"Region changed to {region_code}")
@@ -657,7 +652,8 @@ class MainWindow(QMainWindow):
             if league_entries:
                 self.profile_widget.update_rank_info(league_entries)
             
-            # Show widgets
+            # Hide homepage image - REMOVED
+            # self.homepage_image_label.hide()
             self.profile_widget.show()
             self.match_history.show()
             
@@ -671,6 +667,10 @@ class MainWindow(QMainWindow):
             
         except Exception as e:
             self.status_bar.showMessage(f"Error processing results: {str(e)}")
+            # Ensure image is hidden - REMOVED
+            # self.homepage_image_label.hide() 
+            self.profile_widget.hide() 
+            self.match_history.hide()
         
         finally:
             # Re-enable inputs
@@ -679,21 +679,28 @@ class MainWindow(QMainWindow):
             self.region_selector.setEnabled(True)
             
             # Clean up worker
-            self.search_worker.deleteLater()
-            self.search_worker = None
+            if self.search_worker:
+                self.search_worker.deleteLater()
+                self.search_worker = None
 
     def on_search_error(self, error_message):
         """Handle search error"""
         self.status_bar.showMessage(error_message)
         
+        # Hide image - REMOVED
+        # self.homepage_image_label.hide() 
+        self.profile_widget.hide()
+        self.match_history.hide()
+
         # Re-enable inputs
         self.game_name_input.setEnabled(True)
         self.tag_line_input.setEnabled(True)
         self.region_selector.setEnabled(True)
         
         # Clean up worker
-        self.search_worker.deleteLater()
-        self.search_worker = None
+        if self.search_worker:
+            self.search_worker.deleteLater()
+            self.search_worker = None
 
     def load_more_match_history(self):
         """Load more match history for current player"""
@@ -797,6 +804,32 @@ class MainWindow(QMainWindow):
         self.match_worker.deleteLater()
         self.match_worker = None
 
+    def get_queue_name(self, match_details):
+        """
+        Get a human-readable queue name from match details
+        
+        Args:
+            match_details: Match details dictionary from Riot API
+            
+        Returns:
+            String with queue name
+        """
+        info = match_details.get('info', {})
+        queue_id = info.get('queueId', 0)
+        game_mode = info.get('gameMode', 'Unknown')
+        
+        # First try to get the name from the mapping
+        queue_name = Constants.QUEUE_TYPES.get(queue_id)
+        
+        # If not found, use the game mode
+        if not queue_name:
+            if game_mode == 'CLASSIC':
+                queue_name = "Normal" if info.get('gameType') != 'MATCHED_GAME' else "Custom"
+            else:
+                queue_name = game_mode
+                
+        return queue_name
+
     def add_match_widget(self, match_details):
         """Add a match widget to the match history"""
         match_widget = MatchWidget()
@@ -820,8 +853,11 @@ class MainWindow(QMainWindow):
                 match_widget.match_result.setProperty("victory", "true" if victory else "false")
                 match_widget.match_result.setStyle(match_widget.match_result.style())
                 
+                # Get queue name instead of using game mode directly
+                queue_name = self.get_queue_name(match_details)
+                
                 match_widget.match_result.setText(
-                    f"{'Victory' if victory else 'Defeat'} - {match_details.get('info', {}).get('gameMode', 'Unknown')}"
+                    f"{'Victory' if victory else 'Defeat'} - {queue_name}"
                 )
                 match_widget.match_stats.setText(
                     f"KDA: {kills}/{deaths}/{assists} - CS: {cs} ({cs_per_min:.1f}/min)"
