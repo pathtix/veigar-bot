@@ -8,8 +8,10 @@ A desktop application built with Python and PyQt6 that allows users to track Lea
 - **Profile Information**: View summoner level and profile icon
 - **Rank Display**: See Solo/Duo and Flex queue rankings with detailed statistics
 - **Match History**: Browse through recent matches with detailed performance statistics
+  - **Detailed Queue Information**: Clear display of game modes (Ranked Solo/Duo, Normal Draft, ARAM, etc.)
 - **Champion & Item Display**: Visual representation of champions played and items built
 - **Multi-Region Support**: Access player data from all major League of Legends regions
+- **Centralized Constants**: All game-related constants (regions, queue types) maintained in a single location
 
 ## Prerequisites
 
@@ -68,8 +70,11 @@ veigar-bot/
 │   │   └── riot_api.py
 │   ├── ui/
 │   │   ├── main_window.py
+│   │   ├── settings_dialog.py
 │   │   ├── styles.py
 │   │   └── workers.py
+│   ├── utils/
+│   │   └── settings.py
 │   ├── assets/
 │   │   └── application_icon.ico
 │   └── main.py
