@@ -1,0 +1,6 @@
+/.env
+/.venv
+/build
+/dist
+/file_version_info.txt
+/veigar_bot.spec
