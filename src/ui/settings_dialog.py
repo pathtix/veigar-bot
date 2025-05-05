@@ -57,6 +57,11 @@ class SettingsDialog(QDialog):
         self.auto_search_checkbox.setChecked(self.settings.get("auto_search_on_startup", False))
         default_player_layout.addRow("", self.auto_search_checkbox)
         
+        # Debug mode
+        self.debug_mode_checkbox = QCheckBox("Enable debug mode (API request logs)")
+        self.debug_mode_checkbox.setChecked(self.settings.get("debug_mode", False))
+        default_player_layout.addRow("", self.debug_mode_checkbox)
+        
         layout.addWidget(default_player_frame)
         
         # Add separator
@@ -82,6 +87,7 @@ class SettingsDialog(QDialog):
         self.settings.set("default_player_name", self.player_name_input.text().strip())
         self.settings.set("default_tag_line", self.tag_line_input.text().strip().lstrip('#'))
         self.settings.set("auto_search_on_startup", self.auto_search_checkbox.isChecked())
+        self.settings.set("debug_mode", self.debug_mode_checkbox.isChecked())
         self.accept()
     
     def reset_settings(self):
@@ -92,4 +98,5 @@ class SettingsDialog(QDialog):
         self.region_selector.setCurrentText(self.settings.get("default_region"))
         self.player_name_input.setText(self.settings.get("default_player_name", ""))
         self.tag_line_input.setText(self.settings.get("default_tag_line", ""))
-        self.auto_search_checkbox.setChecked(self.settings.get("auto_search_on_startup", False)) 
+        self.auto_search_checkbox.setChecked(self.settings.get("auto_search_on_startup", False))
+        self.debug_mode_checkbox.setChecked(self.settings.get("debug_mode", False)) 

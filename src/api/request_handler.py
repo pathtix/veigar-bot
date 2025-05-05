@@ -40,7 +40,8 @@ class RequestHandler:
         api_key: Optional[str] = None,
         timeout: int = 30,
         retry_count: int = 3,
-        language: str = "en_US"
+        language: str = "en_US",
+        debug_mode: bool = False
     ):
         """Initialize the request handler.
         
@@ -49,6 +50,7 @@ class RequestHandler:
             timeout: Request timeout in seconds
             retry_count: Number of times to retry failed requests
             language: Default language for responses
+            debug_mode: Whether to print API request logs to terminal
         """
         # Set up logging
         self.logger = logging.getLogger(__name__)
@@ -56,7 +58,13 @@ class RequestHandler:
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
-        self.logger.setLevel(logging.INFO)
+        
+        # Set log level based on debug mode
+        self.debug_mode = debug_mode
+        if self.debug_mode:
+            self.logger.setLevel(logging.DEBUG)
+        else:
+            self.logger.setLevel(logging.INFO)
         
         # Try to load API key with better error handling
         try:
@@ -212,6 +220,16 @@ class RequestHandler:
         retries = 0
         last_error = None
         
+        # Log detailed request info in debug mode
+        if self.debug_mode:
+            debug_info = f"API Request: {method} {url}"
+            if params:
+                debug_info += f"\nParams: {params}"
+            if data:
+                debug_info += f"\nData: {data}"
+            debug_info += f"\nEndpoint: {endpoint}, Limit type: {limit_type}"
+            self.logger.debug(debug_info)
+        
         while retries <= self.retry_count:
             try:
                 # Handle rate limiting
@@ -225,6 +243,14 @@ class RequestHandler:
                     json=data,
                     timeout=self.timeout
                 )
+                
+                # Log response in debug mode
+                if self.debug_mode:
+                    self.logger.debug(f"Response status: {response.status_code}")
+                    if response.status_code == 200:
+                        # Log a preview of the response data (first 200 chars)
+                        preview = response.text[:200] + ('...' if len(response.text) > 200 else '')
+                        self.logger.debug(f"Response preview: {preview}")
                 
                 # Handle response
                 return self._handle_response(response, f"{method} {url}")
@@ -257,63 +283,31 @@ class RequestHandler:
         params: Optional[Dict[str, Any]] = None,
         limit_type: str = 'default'
     ) -> Union[Dict[str, Any], List[Any], None]:
-        """Make a GET request to the Riot API with rate limiting and retries"""
-        retries = 0
-        while retries <= self.retry_count:
-            try:
-                # Handle rate limiting
-                self._handle_rate_limit(endpoint, limit_type)
-                
-                # Log the request details
-                param_str = f" with params {params}" if params else ""
-                self.logger.info(f"GET Request: {url}{param_str}")
-                
-                # Make request
-                response = self.session.get(url, params=params, timeout=self.timeout)
-                
-                # Log the response status
-                self.logger.info(f"Response: HTTP {response.status_code}")
-                
-                # Handle response
-                if response.status_code == 200:
-                    return response.json()
-                elif response.status_code == 429:  # Rate limit exceeded
-                    retry_after = int(response.headers.get('Retry-After', 1))
-                    self.logger.warning(f"Rate limit hit: Retry after {retry_after} seconds")
-                    time.sleep(retry_after)
-                    retries += 1
-                    continue
-                elif response.status_code == 404:
-                    self.logger.warning(f"Resource not found: {url}")
-                    return None
-                elif response.status_code >= 500:
-                    if retries < self.retry_count:
-                        wait_time = (2 ** retries)  # Exponential backoff
-                        self.logger.warning(f"Server error, retrying in {wait_time} seconds")
-                        time.sleep(wait_time)
-                        retries += 1
-                        continue
-                    raise ServiceUnavailableError()
-                else:
-                    self.logger.error(f"Request failed: HTTP {response.status_code}: {response.text}")
-                    raise RiotAPIError(f"HTTP {response.status_code}: {response.text}")
-                    
-            except requests.Timeout:
-                if retries < self.retry_count:
-                    retries += 1
-                    continue
-                raise TimeoutError()
-                
-            except requests.RequestException as e:
-                if retries < self.retry_count:
-                    retries += 1
-                    continue
-                raise NetworkError(e)
-                
-            except json.JSONDecodeError:
-                raise ParseError("Invalid JSON response")
+        """Make a GET request to the Riot API.
         
-        raise RateLimitError()
+        Args:
+            url: Complete API URL
+            endpoint: Endpoint identifier for rate limiting (e.g., 'summoner-v4')
+            params: Query parameters
+            limit_type: Rate limit type to use
+            
+        Returns:
+            Parsed JSON response or None if error occurs
+            
+        Example:
+            >>> handler.get('https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/SummonerName', 'summoner-v4')
+        """
+        try:
+            if self.debug_mode:
+                self.logger.debug(f"GET Request: {url}")
+                if params:
+                    self.logger.debug(f"Params: {params}")
+            
+            return self.request('GET', url, endpoint, params=params, limit_type=limit_type)
+            
+        except RiotAPIError as e:
+            self.logger.error(f"GET request error: {e.message}")
+            return None
 
     def post(self, url: str, endpoint: str, data: Dict[str, Any], **kwargs) -> Dict[str, Any]:
         """Make a POST request.
@@ -327,4 +321,15 @@ class RequestHandler:
         Returns:
             Parsed JSON response
         """
-        return self.request('POST', url, endpoint, data=data, **kwargs) 
+        try:
+            if self.debug_mode:
+                self.logger.debug(f"POST Request: {url}")
+                self.logger.debug(f"Data: {data}")
+                if kwargs:
+                    self.logger.debug(f"Additional args: {kwargs}")
+            
+            return self.request('POST', url, endpoint, data=data, **kwargs)
+            
+        except RiotAPIError as e:
+            self.logger.error(f"POST request error: {e.message}")
+            return None 

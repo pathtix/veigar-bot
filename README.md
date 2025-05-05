@@ -12,6 +12,7 @@ A desktop application built with Python and PyQt6 that allows users to track Lea
 - **Champion & Item Display**: Visual representation of champions played and items built
 - **Multi-Region Support**: Access player data from all major League of Legends regions
 - **Centralized Constants**: All game-related constants (regions, queue types) maintained in a single location
+- **Debug Mode**: Optional logging of API requests to the terminal for debugging
 
 ## Prerequisites
 

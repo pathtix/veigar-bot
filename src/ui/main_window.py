@@ -275,9 +275,16 @@ class MainWindow(QMainWindow):
             # Initialize Settings
             self.settings = Settings()
             
-            # Initialize APIs
-            self.riot_api = RiotAPI()
+            # Initialize APIs with debug mode
+            debug_mode = self.settings.get("debug_mode", False)
+            self.riot_api = RiotAPI(debug_mode=debug_mode)
             self.ddragon = DataDragonAPI()
+            
+            # Log debug mode status
+            if debug_mode:
+                self.logger.info("Debug mode is ENABLED - API request logs will be shown")
+            else:
+                self.logger.info("Debug mode is disabled (enable in Settings to see API request logs)")
             
             # Set window properties
             self.setWindowTitle("Veigar Bot")
@@ -336,20 +343,6 @@ class MainWindow(QMainWindow):
         
         # Create toolbar
         self._create_toolbar()
-
-        # Homepage Image (Added ABOVE search bar)
-        self.homepage_image_label = QLabel()
-        image_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'assets', 'homepage_image.jpg'))
-        if os.path.exists(image_path):
-            pixmap = QPixmap(image_path)
-            # Scale pixmap to height 200, keeping aspect ratio
-            pixmap = pixmap.scaledToHeight(200, Qt.TransformationMode.SmoothTransformation)
-            self.homepage_image_label.setPixmap(pixmap)
-            self.homepage_image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.homepage_image_label.setFixedHeight(200) # Keep fixed height for layout
-            main_layout.addWidget(self.homepage_image_label) # Add image BEFORE search frame
-        else:
-            self.logger.warning(f"Homepage image not found at: {image_path}")
 
         # Search section
         search_frame = QFrame()
@@ -434,7 +427,25 @@ class MainWindow(QMainWindow):
         if dialog.exec():
             # Settings were saved
             self._load_default_settings()
+            
+            # Apply debug mode setting immediately
+            self._update_debug_mode()
+            
             self.status_bar.showMessage("Settings saved")
+    
+    def _update_debug_mode(self):
+        """Update debug mode on API clients"""
+        debug_mode = self.settings.get("debug_mode", False)
+        # Create a new handler with the updated debug mode
+        self.riot_api.handler.debug_mode = debug_mode
+        
+        # Set the log level based on debug mode
+        if debug_mode:
+            self.riot_api.handler.logger.setLevel(logging.DEBUG)
+            self.logger.info("Debug mode enabled - API request logs will be shown")
+        else:
+            self.riot_api.handler.logger.setLevel(logging.INFO)
+            self.logger.info("Debug mode disabled")
 
     def go_home(self):
         """Reset the view to home state"""

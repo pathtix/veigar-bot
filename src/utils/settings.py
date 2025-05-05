@@ -15,7 +15,8 @@ class Settings:
             "default_player_name": "",
             "default_tag_line": "",
             "default_region": "TR",
-            "auto_search_on_startup": False
+            "auto_search_on_startup": False,
+            "debug_mode": False  # Whether to print API request logs
         }
         
         # Current settings (loaded from file or defaults)

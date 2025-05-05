@@ -10,7 +10,8 @@ class RiotAPI:
         api_key: Optional[str] = None,
         region: str = 'EUROPE',
         language: str = 'en_US',
-        max_workers: int = 4  # Number of concurrent requests
+        max_workers: int = 4,  # Number of concurrent requests
+        debug_mode: bool = False
     ):
         """
         Initialize the Riot API wrapper
@@ -20,8 +21,13 @@ class RiotAPI:
             region: Default region to use (e.g., 'EUROPE', 'AMERICAS')
             language: Default language for responses
             max_workers: Maximum number of concurrent requests
+            debug_mode: Whether to print API request logs to terminal
         """
-        self.handler = RequestHandler(api_key=api_key, language=language)
+        self.handler = RequestHandler(
+            api_key=api_key, 
+            language=language, 
+            debug_mode=debug_mode
+        )
         self.region = region.upper()
         self.max_workers = max_workers
         
