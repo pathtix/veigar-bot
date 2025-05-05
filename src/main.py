@@ -5,8 +5,6 @@ from PyQt6.QtGui import QIcon
 
 def main():
     app = QApplication(sys.argv)
-    
-    # Set application-wide icon
     app_icon = QIcon("src/assets/application_icon.ico")
     app.setWindowIcon(app_icon)
     
