@@ -4,3 +4,9 @@
 /dist
 /file_version_info.txt
 /veigar_bot.spec
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/

@@ -388,65 +388,41 @@ class RiotAPI:
             self.handler.logger.error(f"Error fetching league entries: {e.message}")
             return None
 
-    def get_match_history_batch(self, puuid: str, count: int = 20) -> List[Dict[str, Any]]:
+    def get_match_history_batch(self, puuid: str, count: int = 20, start: int = 0) -> List[Dict[str, Any]]:
         """
-        Fetch match history and details in parallel batches
+        Fetch match history with details in one batch operation
         
         Args:
             puuid: Player Universally Unique IDentifier
-            count: Number of matches to fetch (default 20)
+            count: Number of matches to retrieve
+            start: Start index for pagination
             
         Returns:
             List of match details
         """
-        try:
-            # First get match IDs
-            url = Constants.format_api_url(
-                platform_or_region=self.region,
-                endpoint_group='MATCH_V5_APIS',
-                endpoint_name='by-puuid',
-                puuid=puuid
-            )
+        # Get match history IDs
+        match_ids = self.get_match_history(puuid, count=count, start=start)
+        
+        if not match_ids:
+            return []
             
-            params = {'count': count}
-            match_ids = self.handler.get(url, endpoint='match-v5', params=params)
+        # Create a thread pool to fetch match details in parallel
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            # Submit tasks for each match ID
+            future_to_match = {
+                executor.submit(self.get_match_details, match_id): match_id
+                for match_id in match_ids
+            }
             
-            if not match_ids:
-                return []
-
-            # Process matches in smaller batches to avoid overwhelming the API
-            batch_size = min(5, self.max_workers)  # Process 5 matches at a time
+            # Collect results as they complete
             match_details = []
+            for future in as_completed(future_to_match):
+                match_id = future_to_match[future]
+                try:
+                    data = future.result()
+                    if data:
+                        match_details.append(data)
+                except Exception as e:
+                    self.handler.logger.error(f"Error processing match {match_id}: {str(e)}")
             
-            for i in range(0, len(match_ids), batch_size):
-                batch_ids = match_ids[i:i + batch_size]
-                
-                with ThreadPoolExecutor(max_workers=batch_size) as executor:
-                    # Create future tasks for the batch
-                    future_to_match = {
-                        executor.submit(self.get_match_details, match_id): match_id
-                        for match_id in batch_ids
-                    }
-                    
-                    # Process completed tasks as they finish
-                    for future in as_completed(future_to_match):
-                        match_id = future_to_match[future]
-                        try:
-                            details = future.result()
-                            if details:
-                                match_details.append(details)
-                        except Exception as e:
-                            self.handler.logger.error(f"Error fetching match {match_id}: {e}")
-                            continue
-
-            # Sort matches by game creation time (newest first)
-            match_details.sort(
-                key=lambda x: x.get('info', {}).get('gameCreation', 0),
-                reverse=True
-            )
-
-            return match_details
-            
-        except RiotAPIError as e:
-            self.handler.logger.error(f"Error fetching match history: {e.message}")
-            return [] 
+        return match_details 

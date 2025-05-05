@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (
     QMessageBox
 )
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap, QImage, QIcon
+from PyQt6.QtGui import QPixmap, QImage, QIcon, QPainter, QRegion
 import requests
 from io import BytesIO
 from api.riot_api import RiotAPI
@@ -22,60 +22,110 @@ class ProfileWidget(QFrame):
         self.setObjectName("profileWidget")
         
         layout = QHBoxLayout(self)
+        layout.setSpacing(20)
+        
+        # Left side with profile icon and level
+        left_container = QWidget()
+        left_layout = QVBoxLayout(left_container)
+        left_layout.setSpacing(0)
+        left_layout.setContentsMargins(0, 0, 0, 0)
         
         # Profile Icon Section
-        self.profile_icon = QLabel("Profile\nIcon\nHere")
+        icon_container = QWidget()
+        icon_container.setObjectName("iconContainer")
+        icon_container.setFixedSize(108, 108)
+        icon_layout = QVBoxLayout(icon_container)
+        icon_layout.setContentsMargins(0, 0, 0, 0)
+        icon_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        self.profile_icon = QLabel()
         self.profile_icon.setFixedSize(100, 100)
         self.profile_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.profile_icon.setObjectName("profileIcon")
-        layout.addWidget(self.profile_icon)
+        self.profile_icon.setScaledContents(False)
+        icon_layout.addWidget(self.profile_icon)
+        
+        left_layout.addWidget(icon_container)
+        
+        # Level label
+        self.level_label = QLabel()
+        self.level_label.setObjectName("levelLabel")
+        self.level_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        left_layout.addWidget(self.level_label, 0, Qt.AlignmentFlag.AlignHCenter)
+        
+        layout.addWidget(left_container)
         
         # Right side info section
         info_widget = QWidget()
         info_layout = QVBoxLayout(info_widget)
-        info_layout.setSpacing(8)
+        info_layout.setSpacing(4)
+        info_layout.setContentsMargins(0, 0, 0, 0)
         
-        # Player name and level section
+        # Player name and region
         self.player_header = QLabel()
         self.player_header.setObjectName("playerHeader")
         info_layout.addWidget(self.player_header)
         
-        # Rank Information Section
-        rank_widget = QWidget()
-        rank_widget.setObjectName("rankInfo")
-        rank_layout = QVBoxLayout(rank_widget)
-        rank_layout.setSpacing(4)
+        # Ranks container
+        ranks_widget = QWidget()
+        ranks_layout = QHBoxLayout(ranks_widget)
+        ranks_layout.setContentsMargins(0, 0, 0, 0)
+        ranks_layout.setSpacing(30)
         
         # Solo/Duo Rank
+        solo_rank_widget = QWidget()
+        solo_rank_layout = QVBoxLayout(solo_rank_widget)
+        solo_rank_layout.setContentsMargins(0, 0, 0, 0)
+        solo_rank_layout.setSpacing(2)
+        
         self.solo_rank_label = QLabel("Unranked")
         self.solo_rank_label.setObjectName("rankTitle")
-        rank_layout.addWidget(self.solo_rank_label)
+        solo_rank_layout.addWidget(self.solo_rank_label)
         
         self.solo_rank_stats = QLabel("")
-        rank_layout.addWidget(self.solo_rank_stats)
+        self.solo_rank_stats.setObjectName("rankStats")
+        solo_rank_layout.addWidget(self.solo_rank_stats)
+        
+        ranks_layout.addWidget(solo_rank_widget)
+        
+        # Vertical separator
+        separator = QFrame()
+        separator.setFrameShape(QFrame.Shape.VLine)
+        separator.setFrameShadow(QFrame.Shadow.Sunken)
+        separator.setObjectName("rankSeparator")
+        ranks_layout.addWidget(separator)
         
         # Flex Rank
+        flex_rank_widget = QWidget()
+        flex_rank_layout = QVBoxLayout(flex_rank_widget)
+        flex_rank_layout.setContentsMargins(0, 0, 0, 0)
+        flex_rank_layout.setSpacing(2)
+        
         self.flex_rank_label = QLabel("Unranked (Flex)")
         self.flex_rank_label.setObjectName("rankTitle")
-        rank_layout.addWidget(self.flex_rank_label)
+        flex_rank_layout.addWidget(self.flex_rank_label)
         
         self.flex_rank_stats = QLabel("")
-        rank_layout.addWidget(self.flex_rank_stats)
+        self.flex_rank_stats.setObjectName("rankStats")
+        flex_rank_layout.addWidget(self.flex_rank_stats)
         
-        info_layout.addWidget(rank_widget)
+        ranks_layout.addWidget(flex_rank_widget)
+        
+        info_layout.addWidget(ranks_widget)
         layout.addWidget(info_widget)
         layout.setStretch(1, 1)
 
     def update_player_info(self, game_name: str, tag_line: str, level: int, region: str):
         """Update player information display"""
         header_text = f"""
-        <div style='color: #4a90e2;'>
-            <span style='font-size: 24px;'>{game_name}#{tag_line}</span>
-            <span style='color: #888888; margin-left: 20px;'>Region: {region}</span>
+        <div style='color: #ffffff;'>
+            <span style='font-size: 24px;'>{game_name}</span>
+            <span style='color: #b07fde; font-size: 24px;'>#{tag_line}</span>
+            <span style='color: #a0a0a0; margin-left: 20px; font-size: 16px;'>Region: {region}</span>
         </div>
-        <div style='color: #888888;'>Level: {level}</div>
         """
         self.player_header.setText(header_text)
+        self.level_label.setText(f"LEVEL {level}")
 
     def update_rank_info(self, league_entries):
         """Update rank information display"""
@@ -89,7 +139,7 @@ class ProfileWidget(QFrame):
             win_rate = (wins / (wins + losses) * 100) if wins + losses > 0 else 0
             
             rank_text = f"{tier.title()} {rank}"
-            stats_text = f"LP: {lp} | W: {wins} L: {losses} | Win Rate: {win_rate:.1f}%"
+            stats_text = f"{lp} LP | {wins}W {losses}L | Win Rate: {win_rate:.1f}%"
             
             if queue_type == 'RANKED_SOLO_5x5':
                 self.solo_rank_label.setText(f"Solo/Duo: {rank_text}")
@@ -141,53 +191,67 @@ class MatchHistoryWidget(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("matchHistoryWidget")
+        self.match_batch_size = 10
+        self.current_offset = 0
         
         layout = QVBoxLayout(self)
         layout.setSpacing(10)
+        layout.setContentsMargins(16, 16, 16, 16)
         
         # Header section
-        header_layout = QHBoxLayout()
+        header_widget = QWidget()
+        header_widget.setObjectName("matchHistoryHeader")
+        header_layout = QHBoxLayout(header_widget)
+        header_layout.setContentsMargins(0, 0, 0, 4)
+        header_layout.setSpacing(12)
         
-        # Title
+        # Title with container
+        title_container = QWidget()
+        title_layout = QHBoxLayout(title_container)
+        title_layout.setContentsMargins(0, 0, 0, 0)
+        
         title = QLabel("Match History")
         title.setObjectName("matchHistoryTitle")
-        header_layout.addWidget(title)
+        title_layout.addWidget(title)
+        title_layout.addStretch()
         
-        # Match count selector
-        self.match_count = QSpinBox()
-        self.match_count.setRange(5, 20)
-        self.match_count.setValue(5)
-        self.match_count.setSingleStep(5)
-        self.match_count.setObjectName("matchCount")
-        header_layout.addWidget(self.match_count)
-        
-        # Load button
-        self.load_button = QPushButton("Load Matches")
-        self.load_button.setObjectName("loadButton")
-        header_layout.addWidget(self.load_button)
+        header_layout.addWidget(title_container, 1)
         
         # Progress bar
         self.progress_bar = QProgressBar()
         self.progress_bar.setTextVisible(False)
+        self.progress_bar.setFixedWidth(120)
         self.progress_bar.hide()
         header_layout.addWidget(self.progress_bar)
         
-        header_layout.addStretch()
-        layout.addLayout(header_layout)
+        layout.addWidget(header_widget)
         
         # Scroll area for matches
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setObjectName("matchScroll")
+        self.scroll = QScrollArea()
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setObjectName("matchScroll")
         
         # Container for matches
         self.matches_container = QWidget()
         self.matches_layout = QVBoxLayout(self.matches_container)
         self.matches_layout.setSpacing(8)
-        self.matches_layout.addStretch()
         
-        scroll.setWidget(self.matches_container)
-        layout.addWidget(scroll)
+        # Load more button at the bottom
+        self.load_more_container = QWidget()
+        load_more_layout = QHBoxLayout(self.load_more_container)
+        load_more_layout.setContentsMargins(0, 8, 0, 8)
+        
+        self.load_more_button = QPushButton("Load More Matches")
+        self.load_more_button.setObjectName("loadMoreButton")
+        self.load_more_button.hide()  # Initially hidden
+        load_more_layout.addWidget(self.load_more_button, 0, Qt.AlignmentFlag.AlignCenter)
+        
+        # Add the matches and load more button to layout
+        self.matches_layout.addStretch()
+        self.matches_layout.addWidget(self.load_more_container)
+        
+        self.scroll.setWidget(self.matches_container)
+        layout.addWidget(self.scroll)
         
         # Set size policy to expand
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
@@ -231,7 +295,7 @@ class MainWindow(QMainWindow):
             
             # Set window properties
             self.setWindowTitle("Veigar Bot")
-            self.setMinimumSize(800, 1000)
+            self.setMinimumSize(800, 1150)
             
             # Set application icon
             self.set_application_icon()
@@ -261,7 +325,7 @@ class MainWindow(QMainWindow):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
-        main_layout.setSpacing(0)
+        main_layout.setSpacing(16)
         main_layout.setContentsMargins(20, 20, 20, 20)
         
         # Search section
@@ -304,7 +368,7 @@ class MainWindow(QMainWindow):
         # Match history section
         self.match_history = MatchHistoryWidget()
         self.match_history.hide()
-        self.match_history.load_button.clicked.connect(self.load_match_history)
+        self.match_history.load_more_button.clicked.connect(self.load_more_match_history)
         main_layout.addWidget(self.match_history, 1)
         
         # Add status bar
@@ -362,7 +426,7 @@ class MainWindow(QMainWindow):
         """Load and display profile icon"""
         try:
             icon_url = self.ddragon.get_profile_icon(icon_id)
-            worker = IconLoaderWorker(icon_url, (100, 100), self.profile_widget.profile_icon)
+            worker = IconLoaderWorker(icon_url, (120, 120), self.profile_widget.profile_icon)
             worker.finished.connect(lambda pixmap, label: (
                 self.on_icon_loaded(pixmap, label),
                 self.cleanup_icon_worker(worker)
@@ -420,7 +484,49 @@ class MainWindow(QMainWindow):
 
     def on_icon_loaded(self, pixmap: QPixmap, label: QLabel):
         """Handle icon loading completion"""
-        label.setPixmap(pixmap)
+        if label.objectName() == "profileIcon":
+            # Create a perfectly circular mask for the profile icon
+            size = 84  # Account for the 4px border and 4px margin (100px - 8px - 8px)
+            
+            # Scale the pixmap to fill the circle completely
+            pixmap = pixmap.scaled(
+                size, 
+                size,
+                Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+                Qt.TransformationMode.SmoothTransformation
+            )
+            
+            # Center the image if needed
+            if pixmap.width() > size or pixmap.height() > size:
+                x = max(0, (pixmap.width() - size) // 2)
+                y = max(0, (pixmap.height() - size) // 2)
+                pixmap = pixmap.copy(x, y, size, size)
+            
+            # Create a circular mask
+            mask = QPixmap(size, size)
+            mask.fill(Qt.GlobalColor.transparent)
+            
+            painter = QPainter(mask)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            painter.setBrush(Qt.GlobalColor.white)
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.drawEllipse(0, 0, size, size)
+            painter.end()
+            
+            # Create result pixmap
+            result = QPixmap(size, size)
+            result.fill(Qt.GlobalColor.transparent)
+            
+            # Draw the masked image
+            painter = QPainter(result)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            painter.setClipRegion(QRegion(mask.mask()))
+            painter.drawPixmap(0, 0, pixmap)
+            painter.end()
+            
+            label.setPixmap(result)
+        else:
+            label.setPixmap(pixmap)
 
     def on_icon_error(self, error_message: str, label: QLabel):
         """Handle icon loading error"""
@@ -481,8 +587,11 @@ class MainWindow(QMainWindow):
             self.profile_widget.show()
             self.match_history.show()
             
-            # Load initial match history
-            self.load_match_history()
+            # Reset match history state
+            self.match_history.current_offset = 0
+            
+            # Initialize match history
+            self.load_more_match_history()
             
             self.status_bar.showMessage("Player found!")
             
@@ -512,28 +621,33 @@ class MainWindow(QMainWindow):
         self.search_worker.deleteLater()
         self.search_worker = None
 
-    def load_match_history(self):
-        """Load match history for current player"""
+    def load_more_match_history(self):
+        """Load more match history for current player"""
         if not self.current_puuid:
             self.status_bar.showMessage("No player selected")
             return
         
-        count = self.match_history.match_count.value()
-        
-        # Show progress bar and disable load button
+        # Show progress bar and disable load more button
         self.match_history.progress_bar.setValue(0)
         self.match_history.progress_bar.show()
-        self.match_history.load_button.setEnabled(False)
-        self.status_bar.showMessage(f"Loading {count} matches...")
+        self.match_history.load_more_button.setEnabled(False)
+        self.match_history.load_more_button.setText("Loading...")
+        self.status_bar.showMessage("Loading more matches...")
         
-        # Clear existing matches
-        while self.match_history.matches_layout.count() > 1:
-            item = self.match_history.matches_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
+        # Only clear existing matches if this is the first load
+        if self.match_history.current_offset == 0:
+            while self.match_history.matches_layout.count() > 2:
+                item = self.match_history.matches_layout.takeAt(0)
+                if item.widget():
+                    item.widget().deleteLater()
         
         # Create and start worker thread
-        self.match_worker = MatchHistoryWorker(self.riot_api, self.current_puuid, count)
+        self.match_worker = MatchHistoryWorker(
+            self.riot_api, 
+            self.current_puuid, 
+            self.match_history.match_batch_size, 
+            self.match_history.current_offset
+        )
         self.match_worker.finished.connect(self.on_matches_loaded)
         self.match_worker.error.connect(self.on_match_load_error)
         self.match_worker.progress.connect(self.update_match_progress)
@@ -547,19 +661,50 @@ class MainWindow(QMainWindow):
         """Handle match loading completion"""
         try:
             if match_details:
+                # Remove the stretch to add matches before it
+                self.match_history.matches_layout.removeItem(
+                    self.match_history.matches_layout.itemAt(
+                        self.match_history.matches_layout.count() - 2
+                    )
+                )
+                
+                # Store current scroll position if this is not the first load
+                scroll_to_bottom = self.match_history.current_offset == 0
+                
+                # Add new matches
                 for details in match_details:
                     self.add_match_widget(details)
-                self.status_bar.showMessage("Match history loaded")
+                
+                # Add stretch back before the load more button
+                self.match_history.matches_layout.insertStretch(
+                    self.match_history.matches_layout.count() - 1
+                )
+                
+                # Update offset for next batch
+                self.match_history.current_offset += self.match_history.match_batch_size
+                
+                # Show load more button if matches were returned
+                self.match_history.load_more_button.show()
+                
+                # Scroll to show new content if it's the first load
+                if scroll_to_bottom:
+                    self.match_history.scroll.verticalScrollBar().setValue(0)
+                
+                self.status_bar.showMessage("Matches loaded")
             else:
-                self.status_bar.showMessage("No matches found")
+                # Hide load more button if no more matches
+                if self.match_history.current_offset > 0:
+                    self.match_history.load_more_button.hide()
+                self.status_bar.showMessage("No more matches found")
         
         except Exception as e:
             self.status_bar.showMessage(f"Error processing matches: {str(e)}")
         
         finally:
-            # Hide progress bar and re-enable load button
+            # Hide progress bar and re-enable load more button
             self.match_history.progress_bar.hide()
-            self.match_history.load_button.setEnabled(True)
+            self.match_history.load_more_button.setEnabled(True)
+            self.match_history.load_more_button.setText("Load More Matches")
             
             # Clean up worker
             self.match_worker.deleteLater()
@@ -569,9 +714,10 @@ class MainWindow(QMainWindow):
         """Handle match loading error"""
         self.status_bar.showMessage(error_message)
         
-        # Hide progress bar and re-enable load button
+        # Hide progress bar and re-enable load more button
         self.match_history.progress_bar.hide()
-        self.match_history.load_button.setEnabled(True)
+        self.match_history.load_more_button.setEnabled(True)
+        self.match_history.load_more_button.setText("Load More Matches")
         
         # Clean up worker
         self.match_worker.deleteLater()

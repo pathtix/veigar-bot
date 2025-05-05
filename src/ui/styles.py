@@ -1,7 +1,8 @@
 MAIN_STYLE = """
 QMainWindow {
-    background-color: #1a1a1a;
+    background-color: #0e0a18;
     color: #ffffff;
+    background-image: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #0e0a18, stop:1 #16123a);
 }
 
 QWidget {
@@ -10,30 +11,31 @@ QWidget {
 }
 
 #searchFrame {
-    background-color: #2d2d2d;
+    background-color: #1a1429;
+    border: 1px solid #3d2f63;
     border-radius: 8px;
     margin-bottom: 20px;
-    padding: 5px;
+    padding: 8px;
 }
 
 QLineEdit {
     padding: 8px;
-    background-color: #2a2a2a;
-    border: 1px solid #3a3a3a;
+    background-color: #1a1429;
+    border: 1px solid #3d2f63;
     border-radius: 4px;
     color: #ffffff;
     font-size: 13px;
 }
 
 QLineEdit:focus {
-    border: 1px solid #4a90e2;
-    background-color: #323232;
+    border: 1px solid #9061c2;
+    background-color: #231a38;
 }
 
 QComboBox {
     padding: 8px;
-    background-color: #2a2a2a;
-    border: 1px solid #3a3a3a;
+    background-color: #1a1429;
+    border: 1px solid #3d2f63;
     border-radius: 4px;
     color: #ffffff;
     min-width: 6em;
@@ -41,8 +43,8 @@ QComboBox {
 }
 
 QComboBox:hover {
-    border: 1px solid #4a90e2;
-    background-color: #323232;
+    border: 1px solid #9061c2;
+    background-color: #231a38;
 }
 
 QComboBox::drop-down {
@@ -59,20 +61,20 @@ QComboBox::down-arrow {
 }
 
 QComboBox:on {
-    border: 1px solid #4a90e2;
+    border: 1px solid #9061c2;
 }
 
 QComboBox QAbstractItemView {
-    background-color: #2a2a2a;
-    border: 1px solid #3a3a3a;
-    selection-background-color: #4a90e2;
+    background-color: #1a1429;
+    border: 1px solid #3d2f63;
+    selection-background-color: #9061c2;
     selection-color: #ffffff;
     outline: none;
 }
 
 QPushButton {
     padding: 8px 16px;
-    background-color: #4a90e2;
+    background-color: #9061c2;
     border: none;
     border-radius: 4px;
     color: #ffffff;
@@ -81,11 +83,11 @@ QPushButton {
 }
 
 QPushButton:hover {
-    background-color: #357abd;
+    background-color: #b07fde;
 }
 
 QPushButton:pressed {
-    background-color: #2d6da3;
+    background-color: #7a4ca5;
 }
 
 QLabel {
@@ -93,62 +95,139 @@ QLabel {
 }
 
 QStatusBar {
-    background-color: #2a2a2a;
+    background-color: #1a1429;
     color: #ffffff;
     padding: 4px;
 }
 
-#profileWidget, #matchHistoryWidget {
-    background-color: #2a2a2a;
+#profileWidget {
+    background-color: #1a1429;
+    border: 1px solid #3d2f63;
     border-radius: 8px;
     padding: 16px;
     margin: 8px 0;
+    background-image: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #1a1429, stop:1 #231a38);
+}
+
+#iconContainer {
+    background: transparent;
+    margin: 0;
+    padding: 4px;
+    position: relative;
 }
 
 #profileIcon {
-    background-color: #1a1a1a;
+    background-color: transparent;
+    border: 4px solid #9061c2;
     border-radius: 50%;
-    padding: 4px;
+    min-width: 92px;
+    min-height: 92px;
+    max-width: 92px;
+    max-height: 92px;
+    padding: 0;
+    margin: 4px;
 }
 
 #playerHeader {
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
-#rankInfo {
+#levelLabel {
+    color: #ffffff;
     font-size: 14px;
+    font-weight: bold;
+    background-color: #9061c2;
+    border: 2px solid #b07fde;
+    border-radius: 10px;
+    padding: 2px 8px;
+    margin-top: 5px;
+    position: relative;
+    z-index: 2;
 }
 
 #rankTitle {
-    color: #4a90e2;
+    color: #b07fde;
     font-weight: bold;
-    margin-top: 4px;
+    font-size: 14px;
+}
+
+#rankStats {
+    color: #a0a0a0;
+    font-size: 13px;
+}
+
+#rankSeparator {
+    background-color: #3d2f63;
+    width: 1px;
+    margin: 0 10px;
+}
+
+#matchHistoryWidget {
+    background-color: #1a1429;
+    border: 1px solid #3d2f63;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 8px 0;
+    background-image: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #1a1429, stop:1 #231a38);
+}
+
+#matchHistoryHeader {
+    background-color: transparent;
+    padding: 0 0 12px 0;
+    margin-bottom: 12px;
 }
 
 #matchHistoryTitle {
-    font-size: 16px;
+    font-size: 20px;
     font-weight: bold;
-    color: #4a90e2;
-    padding-bottom: 8px;
+    color: #b07fde;
+    padding-bottom: 0;
+    margin-bottom: 5px;
+}
+
+#countLabel {
+    color: #a0a0a0;
+    font-size: 13px;
+    margin-right: 4px;
+}
+
+#matchCount {
+    background-color: #1a1429;
+    border: 1px solid #3d2f63;
+    border-radius: 4px;
+    color: #ffffff;
+    padding: 4px 8px;
+    margin-right: 8px;
+    font-size: 13px;
+}
+
+#matchCount::up-button, #matchCount::down-button {
+    width: 16px;
+    background-color: #231a38;
+    border: none;
+}
+
+#matchCount::up-button:hover, #matchCount::down-button:hover {
+    background-color: #9061c2;
 }
 
 #matchWidget {
-    background-color: #232323;
-    border: 1px solid #333333;
+    background-color: #231a38;
+    border: 1px solid #3d2f63;
     border-radius: 6px;
     padding: 12px;
-    margin: 4px 8px;
+    margin: 4px 0;
 }
 
 #matchWidget:hover {
-    background-color: #282828;
-    border-color: #3d3d3d;
+    background-color: #2c2046;
+    border-color: #9061c2;
 }
 
 #matchResult {
     font-weight: bold;
     font-size: 13px;
-    color: #4a90e2;
+    color: #9061c2;
 }
 
 #matchResult[victory="true"] {
@@ -156,12 +235,12 @@ QStatusBar {
 }
 
 #matchResult[victory="false"] {
-    color: #e24a4a;
+    color: #e65c52;
 }
 
 #championIcon {
-    background-color: #1a1a1a;
-    border: 1px solid #333333;
+    background-color: #0e0a18;
+    border: 1px solid #3d2f63;
     border-radius: 6px;
     padding: 2px;
     min-width: 50px;
@@ -169,8 +248,8 @@ QStatusBar {
 }
 
 #itemIcon {
-    background-color: #1a1a1a;
-    border: 1px solid #333333;
+    background-color: #0e0a18;
+    border: 1px solid #3d2f63;
     border-radius: 4px;
     padding: 1px;
     margin: 0 1px;
@@ -190,23 +269,28 @@ QScrollArea > QWidget > QWidget {
 QScrollArea#matchScroll {
     margin: 8px 0;
     min-height: 150px;
+    border: none;
+}
+
+QScrollArea#matchScroll > QWidget {
+    background-color: transparent;
 }
 
 QScrollBar:vertical {
     border: none;
-    background-color: #2a2a2a;
+    background-color: #1a1429;
     width: 10px;
     margin: 0px;
 }
 
 QScrollBar::handle:vertical {
-    background-color: #4a4a4a;
+    background-color: #3d2f63;
     border-radius: 5px;
     min-height: 20px;
 }
 
 QScrollBar::handle:vertical:hover {
-    background-color: #5a5a5a;
+    background-color: #9061c2;
 }
 
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
@@ -219,15 +303,37 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 
 QProgressBar {
     border: none;
-    background-color: #232323;
+    background-color: #1a1429;
     border-radius: 2px;
-    height: 4px;
+    height: 6px;
     text-align: center;
-    margin: 0 10px;
+    margin: 0;
 }
 
 QProgressBar::chunk {
-    background-color: #4a90e2;
+    background-color: #9061c2;
     border-radius: 2px;
+}
+
+#loadMoreButton {
+    background-color: #9061c2;
+    border-radius: 4px;
+    padding: 8px 16px;
+    color: #ffffff;
+    font-weight: bold;
+    min-width: 180px;
+    margin: 10px 0;
+}
+
+#loadMoreButton:hover {
+    background-color: #b07fde;
+}
+
+#loadMoreButton:pressed {
+    background-color: #7a4ca5;
+}
+
+#filtersContainer {
+    margin-left: 20px;
 }
 """ 

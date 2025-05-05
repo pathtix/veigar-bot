@@ -53,18 +53,19 @@ class MatchHistoryWorker(QThread):
     error = pyqtSignal(str)
     progress = pyqtSignal(int)
     
-    def __init__(self, riot_api, puuid: str, count: int):
+    def __init__(self, riot_api, puuid: str, count: int, offset: int = 0):
         super().__init__()
         self.riot_api = riot_api
         self.puuid = puuid
         self.count = count
+        self.offset = offset
         
     def run(self):
         try:
             self.progress.emit(10)  # Show initial progress
             
             # Get match history and details in parallel
-            match_details = self.riot_api.get_match_history_batch(self.puuid, count=self.count)
+            match_details = self.riot_api.get_match_history_batch(self.puuid, count=self.count, start=self.offset)
             
             if not match_details:
                 self.progress.emit(100)
