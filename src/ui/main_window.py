@@ -2,10 +2,10 @@ from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLineEdit, QPushButton, QLabel, QStatusBar, QComboBox,
     QFrame, QScrollArea, QSpinBox, QSizePolicy, QProgressBar,
-    QMessageBox
+    QMessageBox, QToolBar
 )
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap, QImage, QIcon, QPainter, QRegion
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QPixmap, QImage, QIcon, QPainter, QRegion, QAction
 import requests
 from io import BytesIO
 from api.riot_api import RiotAPI
@@ -13,6 +13,8 @@ from api.ddragon_api import DataDragonAPI
 from api.exceptions import APIKeyError
 from .styles import MAIN_STYLE
 from .workers import SearchWorker, MatchHistoryWorker, IconLoaderWorker
+from .settings_dialog import SettingsDialog
+from utils.settings import Settings
 import os
 import logging
 
@@ -289,6 +291,9 @@ class MainWindow(QMainWindow):
         self.logger.setLevel(logging.INFO)
         
         try:
+            # Initialize Settings
+            self.settings = Settings()
+            
             # Initialize APIs
             self.riot_api = RiotAPI()
             self.ddragon = DataDragonAPI()
@@ -306,6 +311,9 @@ class MainWindow(QMainWindow):
             # Create central widget and layout
             self._setup_ui()
             
+            # Load default settings
+            self._load_default_settings()
+            
         except APIKeyError as e:
             QMessageBox.critical(
                 self,
@@ -320,6 +328,23 @@ class MainWindow(QMainWindow):
             )
             raise
             
+    def _load_default_settings(self):
+        """Load default settings and apply them to the UI"""
+        # Set default region
+        default_region = self.settings.get("default_region", "NA")
+        if default_region in self.REGIONS:
+            self.region_selector.setCurrentText(default_region)
+            
+        # Set default player name and tag
+        self.game_name_input.setText(self.settings.get("default_player_name", ""))
+        self.tag_line_input.setText(self.settings.get("default_tag_line", ""))
+        
+        # Auto search if enabled
+        if (self.settings.get("auto_search_on_startup", False) and 
+            self.settings.get("default_player_name") and 
+            self.settings.get("default_tag_line")):
+            self.search_player()
+            
     def _setup_ui(self):
         """Set up the main UI components"""
         central_widget = QWidget()
@@ -327,6 +352,9 @@ class MainWindow(QMainWindow):
         main_layout = QVBoxLayout(central_widget)
         main_layout.setSpacing(16)
         main_layout.setContentsMargins(20, 20, 20, 20)
+        
+        # Create toolbar
+        self._create_toolbar()
         
         # Search section
         search_frame = QFrame()
@@ -383,6 +411,52 @@ class MainWindow(QMainWindow):
         self.search_worker = None
         self.match_worker = None
         self.icon_workers = []  # List to keep track of icon loading workers
+
+    def _create_toolbar(self):
+        """Create the application toolbar"""
+        toolbar = QToolBar("Main Toolbar")
+        toolbar.setMovable(False)
+        toolbar.setIconSize(QSize(24, 24))
+        self.addToolBar(toolbar)
+        
+        # Home button
+        home_action = QAction("Home", self)
+        # Create a simple home icon with a Unicode character
+        home_action.setText("Home")
+        home_action.triggered.connect(self.go_home)
+        toolbar.addAction(home_action)
+        
+        # Settings action
+        settings_action = QAction("Settings", self)
+        # Create a simple settings icon with a Unicode character
+        settings_action.setText("Settings")
+        settings_action.triggered.connect(self.show_settings)
+        toolbar.addAction(settings_action)
+
+    def show_settings(self):
+        """Show the settings dialog"""
+        dialog = SettingsDialog(self.settings, self.REGIONS, self)
+        if dialog.exec():
+            # Settings were saved
+            self._load_default_settings()
+            self.status_bar.showMessage("Settings saved")
+
+    def go_home(self):
+        """Reset the view to home state"""
+        # Hide profile and match history widgets
+        self.profile_widget.hide()
+        self.match_history.hide()
+        
+        # Clear search fields if needed
+        if not self.settings.get("default_player_name"):
+            self.game_name_input.clear()
+            self.tag_line_input.clear()
+        
+        # Reset current puuid
+        self.current_puuid = None
+        
+        # Show status message
+        self.status_bar.showMessage("Returned to home")
 
     def on_region_changed(self, region_code: str):
         """Handle region change"""

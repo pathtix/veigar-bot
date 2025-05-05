@@ -49,15 +49,8 @@ QComboBox:hover {
 
 QComboBox::drop-down {
     border: none;
-    width: 20px;
-}
-
-QComboBox::down-arrow {
-    image: none;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-top: 5px solid #ffffff;
-    margin-right: 8px;
+    width: 0px;
+    background-color: transparent;
 }
 
 QComboBox:on {
@@ -335,5 +328,83 @@ QProgressBar::chunk {
 
 #filtersContainer {
     margin-left: 20px;
+}
+
+/* Settings styles */
+QToolBar {
+    background-color: #1a1429;
+    border: none;
+    border-bottom: 1px solid #3d2f63;
+    padding: 0;
+    spacing: 5px;
+}
+
+QToolBar QToolButton {
+    background-color: transparent;
+    border: none;
+    padding: 6px 12px;
+    color: #ffffff;
+    font-size: 13px;
+    margin: 2px 5px;
+}
+
+QToolBar QToolButton:hover {
+    background-color: #231a38;
+}
+
+QToolBar QToolButton:pressed {
+    background-color: #3d2f63;
+}
+
+#settingsFrame {
+    background-color: #1a1429;
+    border: 1px solid #3d2f63;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 8px 0;
+}
+
+QDialog {
+    background-color: #0e0a18;
+    color: #ffffff;
+    background-image: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #0e0a18, stop:1 #16123a);
+}
+
+QFormLayout {
+    spacing: 12px;
+}
+
+QCheckBox {
+    color: #ffffff;
+    font-size: 13px;
+}
+
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #3d2f63;
+    border-radius: 3px;
+    background-color: #1a1429;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #9061c2;
+    image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNiAxNiI+PHBhdGggZmlsbD0iI2ZmZmZmZiIgZD0iTTYuNzUgMTAuMDk2bDQuOTIzLTQuOTIzYy4xOTgtLjE5OC41Mi0uMTk4LjcxOCAwbC43MDYuNzA3Yy4xOTgtLjE5OC4xOTguNTE5IDAgLjcxOGwtNi4wNDggNi4wNDhjLS4xOTcuMTk4LS41MTkuMTk4LS43MTcgMEwzLjU4IDguODkzYy0uMTk4LS4xOTgtLjE5OC0uNTIwIDAtLjcxN2wuNzA3LS43MDdjLjE5OC0uMTk4LjUyLS4xOTguNzE4IDBsMS43NDMgMS43NDN6Ii8+PC9zdmc+);
+}
+
+QCheckBox::indicator:hover {
+    border-color: #9061c2;
+}
+
+QDialogButtonBox QPushButton {
+    min-width: 70px;
+}
+
+QDialogButtonBox QPushButton[text="Reset"] {
+    background-color: #3d2f63;
+}
+
+QDialogButtonBox QPushButton[text="Reset"]:hover {
+    background-color: #5a4694;
 }
 """ 
